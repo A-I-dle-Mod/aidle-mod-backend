@@ -1,8 +1,12 @@
+import os
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from prisma import Prisma
+from dotenv import load_dotenv
 
-model = AutoModelForSequenceClassification.from_pretrained("KoalaAI/Text-Moderation")
-tokenizer = AutoTokenizer.from_pretrained("KoalaAI/Text-Moderation")
+load_dotenv()
+
+model = AutoModelForSequenceClassification.from_pretrained(os.getenv("MODEL_PATH"))
+tokenizer = AutoTokenizer.from_pretrained(os.getenv("TOKENIZER_PATH"))
 
 def get_model():
   return model
