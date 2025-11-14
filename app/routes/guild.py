@@ -10,11 +10,11 @@ from fastapi import APIRouter, HTTPException, Request
 load_dotenv()
 
 class GuildCreateRequest(BaseModel):
-  owner_id: int
+  owner_id: str
   owner_name: str | None = None
   owner_icon: str | None = None
   guild_name: str
-  guild_id: int
+  guild_id: str
   guild_icon: str | None = None
   moderate: bool = True
 
@@ -113,7 +113,7 @@ async def get_guilds(request: Request):
   return {"status": "success", "guilds": guilds}
 
 @router.get("/guilds/{guild_id}", tags=["guild"])
-async def get_guilds(guild_id: int, request: Request):
+async def get_guilds(guild_id: str, request: Request):
   auth_header = request.headers.get(os.getenv('USER_COOKIE_NAME'))
   if not auth_header:
     raise HTTPException(status_code=401, detail="Authorization header missing")
@@ -158,7 +158,7 @@ async def get_guilds(guild_id: int, request: Request):
 # This is intended to be called via bot, we may need to add a header to
 # Manage this request, so you can't do it willy nilly
 @router.delete("/guild/{guild_id}", tags=["guild"])
-async def delete_guild(guild_id: int):
+async def delete_guild(guild_id: str):
   db = await get_db()
 
   # Delete guild
@@ -175,6 +175,7 @@ async def delete_guild(guild_id: int):
 
 class Settings(BaseModel):
   confidence_limit: float
+  moderation_message: str
   enable_h: bool
   enable_v: bool
   enable_s: bool
@@ -185,7 +186,7 @@ class Settings(BaseModel):
   enable_sh: bool
 
 @router.post("/guild/{guild_id}/settings", tags=["guild"])
-async def update_settings(guild_id: int, item: Settings, request: Request):
+async def update_settings(guild_id: str, item: Settings, request: Request):
   auth_header = request.headers.get(os.getenv('USER_COOKIE_NAME'))
   if not auth_header:
     raise HTTPException(status_code=401, detail="Authorization header missing")
@@ -211,6 +212,7 @@ async def update_settings(guild_id: int, item: Settings, request: Request):
     },
     data={
       "confidence_limit": item.confidence_limit,
+      "moderation_message": item.moderation_message,
       "enable_h": item.enable_h,
       "enable_v": item.enable_v,
       "enable_s": item.enable_s,

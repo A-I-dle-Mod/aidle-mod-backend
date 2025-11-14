@@ -7,7 +7,7 @@ class ModerationRequestMetaData(BaseModel):
   message_id: int
   author_id: int
   author_name: str
-  guild_id: int
+  guild_id: str
 
 class ModerationRequest(BaseModel):
   input_text: str
@@ -123,5 +123,6 @@ async def moderate_text(item: ModerationRequest):
 
   return {
     "results": response,
-    "moderate": True if total_probability >= (confidence_limit / 100) else False
+    "moderate": True if total_probability >= (confidence_limit / 100) else False,
+    "moderation_message": settings.moderation_message
   }

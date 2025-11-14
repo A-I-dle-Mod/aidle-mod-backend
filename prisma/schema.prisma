@@ -21,11 +21,11 @@ model Plan {
 model Guild {
   id           Int       @id @default(autoincrement())
   guild_name   String
-  guild_id     BigInt    @unique
+  guild_id     String    @unique
   guild_icon   String?
   moderate     Boolean   @default(false)
   owner        User?     @relation(fields: [owner_id], references: [owner_id])
-  owner_id     BigInt?
+  owner_id     String?
   messages     Message[]
   settings     Settings? @relation(fields: [settings_id], references: [id])
   settings_id  Int?
@@ -36,7 +36,7 @@ model Message {
   id           Int      @id @default(autoincrement())
   message_id   BigInt   @unique
   guild        Guild    @relation(fields: [guild_id], references: [guild_id])
-  guild_id     BigInt
+  guild_id     String
   author_id    BigInt
   author_name  String
   created_date DateTime @default(now())
@@ -45,25 +45,26 @@ model Message {
 }
 
 model Settings {
-  id               Int      @id @default(autoincrement())
-  enable_h         Boolean  @default(true)
-  enable_v         Boolean  @default(true)
-  enable_s         Boolean  @default(true)
-  enable_h2        Boolean  @default(true)
-  enable_v2        Boolean  @default(true)
-  enable_s3        Boolean  @default(true)
-  enable_hr        Boolean  @default(true)
-  enable_sh        Boolean  @default(true)
-  confidence_limit Float    @default(70.00)
-  guild_id         BigInt   @unique
-  guild            Guild[]
-  created_date     DateTime @default(now())
-  updated_date     DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  enable_h           Boolean  @default(true)
+  enable_v           Boolean  @default(true)
+  enable_s           Boolean  @default(true)
+  enable_h2          Boolean  @default(true)
+  enable_v2          Boolean  @default(true)
+  enable_s3          Boolean  @default(true)
+  enable_hr          Boolean  @default(true)
+  enable_sh          Boolean  @default(true)
+  confidence_limit   Float    @default(70.00)
+  moderation_message String   @default("message moderated")
+  guild_id           String   @unique
+  guild              Guild[]
+  created_date       DateTime @default(now())
+  updated_date       DateTime @default(now())
 }
 
 model User {
   id           Int      @id @default(autoincrement())
-  owner_id     BigInt   @unique
+  owner_id     String   @unique
   owner_name   String?
   owner_icon   String?
   guilds       Guild[]
