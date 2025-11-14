@@ -19,7 +19,7 @@ async def get_me(request: Request):
 
   user = await db.user.find_unique(
     where={
-      "owner_id": int(token["user_id"])
+      "owner_id": token["user_id"]
     },
     include={
       "plan": True,
