@@ -11,21 +11,60 @@ generator client {
   recursive_type_depth = 5
 }
 
+model Plan {
+  id           Int    @id @default(autoincrement())
+  user         User[]
+  max_requests Int
+}
+
 // data models
 model Guild {
-  id         Int @id @default(autoincrement())
-  guild_name String
-  guild_id   BigInt?
-  guild_icon String?
-  moderate   Boolean @default(false)
-  owner      User? @relation(fields: [owner_id], references: [owner_id])
-  owner_id   BigInt?
+  id           Int       @id @default(autoincrement())
+  guild_name   String
+  guild_id     BigInt    @unique
+  guild_icon   String?
+  moderate     Boolean   @default(false)
+  owner        User?     @relation(fields: [owner_id], references: [owner_id])
+  owner_id     BigInt?
+  messages     Message[]
+  settings     Settings? @relation(fields: [settings_id], references: [id])
+  settings_id  Int?
+  created_date DateTime  @default(now())
+}
+
+model Message {
+  id           Int      @id @default(autoincrement())
+  message_id   BigInt   @unique
+  guild        Guild    @relation(fields: [guild_id], references: [guild_id])
+  guild_id     BigInt
+  author_id    BigInt
+  author_name  String
+  created_date DateTime @default(now())
+  score        Float
+}
+
+model Settings {
+  id           Int      @id @default(autoincrement())
+  enable_h     Boolean  @default(true)
+  enable_v     Boolean  @default(true)
+  enable_s     Boolean  @default(true)
+  enable_h2    Boolean  @default(true)
+  enable_v2    Boolean  @default(true)
+  enable_s3    Boolean  @default(true)
+  enable_hr    Boolean  @default(true)
+  enable_sh    Boolean  @default(true)
+  guild_id     BigInt   @unique
+  guild        Guild[]
+  created_date DateTime @default(now())
 }
 
 model User {
-  id         Int @id @default(autoincrement())
-  owner_id   BigInt @unique
-  owner_name String?
-  owner_icon String?
-  guilds     Guild[]
+  id           Int      @id @default(autoincrement())
+  owner_id     BigInt   @unique
+  owner_name   String?
+  owner_icon   String?
+  guilds       Guild[]
+  plan         Plan     @relation(fields: [plan_id], references: [id])
+  plan_id      Int
+  created_date DateTime @default(now())
 }

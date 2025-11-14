@@ -1,14 +1,68 @@
-from app.dependencies import get_model, get_tokenizer
-from fastapi import APIRouter
+from app.dependencies import get_model, get_tokenizer, get_db
+from datetime import datetime
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+class ModerationRequestMetaData(BaseModel):
+  message_id: int
+  author_id: int
+  author_name: str
+  guild_id: int
 
 class ModerationRequest(BaseModel):
   input_text: str
+  metadata: ModerationRequestMetaData
 
 router = APIRouter()
 
 @router.post("/moderate", tags=["moderation"])
 async def moderate_text(item: ModerationRequest):
+  db = await get_db()
+
+  metadata = item.metadata
+
+  # Check to see if they've hit their plan limit
+  guild = await db.guild.find_unique(
+    where={
+      "guild_id": metadata.guild_id
+    },
+    include={
+      "owner": True
+    }
+  )
+  
+  owner = guild.owner
+
+  plan = await db.plan.find_unique(
+    where={
+      "id": owner.plan_id
+    }
+  )
+
+  all_guilds = await db.guild.find_many(
+    where={
+      "owner_id": owner.owner_id
+    }
+  )
+  guildIds = []
+
+  for x in range(len(all_guilds)):
+    guildIds.append(all_guilds[x].guild_id)
+
+  messages = await db.message.find_many(
+    where={
+      "created_date": {
+        "gte": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+      },
+      "guild_id": {
+        "in": guildIds
+      }
+    }
+  )
+
+  if len(messages) + 1 > plan.max_requests:
+    raise HTTPException(status_code=429, detail="You are rate limited until midnight.")
+
   model = get_model()
   tokenizer = get_tokenizer()
 
@@ -28,9 +82,25 @@ async def moderate_text(item: ModerationRequest):
 
   # Combine labels and probabilities, then sort
   label_prob_pairs = list(zip(labels, probabilities))
-  label_prob_pairs.sort(key=lambda item: item[1], reverse=True)  
+  label_prob_pairs.sort(key=lambda item: item[1], reverse=True) 
+
+  total_probability = 0
+  for label, probability in label_prob_pairs:
+    if label != "OK":
+      total_probability += float(probability)
 
   # Prepare the response
   response = [{"label": label, "probability": float(probability)} for label, probability in label_prob_pairs]
+
+  # Store the response in the database
+  await db.message.create(
+    data={
+      "message_id": metadata.message_id,
+      "guild_id": metadata.guild_id,
+      "author_id": metadata.author_id,
+      "author_name": metadata.author_name,
+      "score": total_probability
+    }
+  )
 
   return {"results": response}
