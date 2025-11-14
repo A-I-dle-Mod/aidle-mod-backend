@@ -41,21 +41,24 @@ model Message {
   author_name  String
   created_date DateTime @default(now())
   score        Float
+  Moderated    Boolean  @default(false)
 }
 
 model Settings {
-  id           Int      @id @default(autoincrement())
-  enable_h     Boolean  @default(true)
-  enable_v     Boolean  @default(true)
-  enable_s     Boolean  @default(true)
-  enable_h2    Boolean  @default(true)
-  enable_v2    Boolean  @default(true)
-  enable_s3    Boolean  @default(true)
-  enable_hr    Boolean  @default(true)
-  enable_sh    Boolean  @default(true)
-  guild_id     BigInt   @unique
-  guild        Guild[]
-  created_date DateTime @default(now())
+  id               Int      @id @default(autoincrement())
+  enable_h         Boolean  @default(true)
+  enable_v         Boolean  @default(true)
+  enable_s         Boolean  @default(true)
+  enable_h2        Boolean  @default(true)
+  enable_v2        Boolean  @default(true)
+  enable_s3        Boolean  @default(true)
+  enable_hr        Boolean  @default(true)
+  enable_sh        Boolean  @default(true)
+  confidence_limit Float    @default(70.00)
+  guild_id         BigInt   @unique
+  guild            Guild[]
+  created_date     DateTime @default(now())
+  updated_date     DateTime @default(now())
 }
 
 model User {

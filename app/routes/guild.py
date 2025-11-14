@@ -1,6 +1,7 @@
 from app.dependencies import get_db
 import jwt
 import os
+from datetime import datetime
 from fastapi import APIRouter
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -120,7 +121,6 @@ async def get_guilds(guild_id: int, request: Request):
   user_id = (jwt.decode(auth_header, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256']))['user_id']
 
   db = await get_db()
-  print(user_id)
 
   # Fetch all guilds
   guilds = await db.guild.find_unique(
@@ -129,16 +129,34 @@ async def get_guilds(guild_id: int, request: Request):
       "guild_id": guild_id
     },
     include={
-      'messages': True,
-      'settings': True
+      'messages': {
+        'take': 20
+      }
     }
   )
-  print(guild_id)
+
+  settings = await db.settings.find_unique(
+    where={
+      "guild_id": guilds.guild_id
+    }
+  )
+  
+  if not settings:
+    settings = await db.settings.create(
+      data={
+        "guild_id": guilds.guild_id
+      }
+    )
+
+  guilds.settings = settings
+
 
   await db.disconnect()
 
   return {"status": "success", "guild": guilds}
 
+# This is intended to be called via bot, we may need to add a header to
+# Manage this request, so you can't do it willy nilly
 @router.delete("/guild/{guild_id}", tags=["guild"])
 async def delete_guild(guild_id: int):
   db = await get_db()
@@ -154,3 +172,55 @@ async def delete_guild(guild_id: int):
   await db.disconnect()
 
   return {"status": "success", "deleted_guild_id": deleted_guild.guild_id}
+
+class Settings(BaseModel):
+  confidence_limit: float
+  enable_h: bool
+  enable_v: bool
+  enable_s: bool
+  enable_h2: bool
+  enable_v2: bool
+  enable_s3: bool
+  enable_hr: bool
+  enable_sh: bool
+
+@router.post("/guild/{guild_id}/settings", tags=["guild"])
+async def update_settings(guild_id: int, item: Settings, request: Request):
+  auth_header = request.headers.get(os.getenv('USER_COOKIE_NAME'))
+  if not auth_header:
+    raise HTTPException(status_code=401, detail="Authorization header missing")
+  
+  user_id = (jwt.decode(auth_header, os.getenv('JWT_SECRET_KEY'), algorithms=['HS256']))['user_id']
+
+  db = await get_db()
+
+  # Check the user has access to the guild
+  guild = await db.guild.find_unique(
+    where={
+      "owner_id": user_id,
+      "guild_id": guild_id
+    }
+  )
+
+  if not guild:
+    raise HTTPException(status_code=401, detail="Unauthorised to access this guild")
+
+  await db.settings.update(
+    where={
+      "guild_id": guild_id
+    },
+    data={
+      "confidence_limit": item.confidence_limit,
+      "enable_h": item.enable_h,
+      "enable_v": item.enable_v,
+      "enable_s": item.enable_s,
+      "enable_h2": item.enable_h2,
+      "enable_v2": item.enable_v2,
+      "enable_s3": item.enable_s3,
+      "enable_hr": item.enable_hr,
+      "enable_sh": item.enable_sh,
+      "updated_date": datetime.now()
+    }
+  )
+
+  return {"status": "success"}
