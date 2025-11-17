@@ -63,12 +63,17 @@ model Settings {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  owner_id     String   @unique
-  owner_name   String?
-  owner_icon   String?
-  guilds       Guild[]
-  plan         Plan     @relation(fields: [plan_id], references: [id])
-  plan_id      Int
-  created_date DateTime @default(now())
+  id                   Int       @id @default(autoincrement())
+  owner_id             String    @unique
+  owner_name           String?
+  owner_icon           String?
+  guilds               Guild[]
+  plan                 Plan      @relation(fields: [plan_id], references: [id])
+  plan_id              Int
+  patreon_id           String?   @unique
+  patreon_access_token String?
+  patreon_refresh_token String?
+  patreon_connected_at  DateTime?
+  is_patreon_subscriber Boolean   @default(false)
+  created_date         DateTime  @default(now())
 }
