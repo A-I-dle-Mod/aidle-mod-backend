@@ -10,6 +10,7 @@ from .routes import discord
 from .routes import me
 from .routes import messages
 from .routes import test
+from .routes import patreon
 
 api = FastAPI()
 load_dotenv()
@@ -33,6 +34,7 @@ api.include_router(discord.router)
 api.include_router(me.router)
 api.include_router(messages.router)
 api.include_router(test.router)
+api.include_router(patreon.router)
 
 @api.get("/")
 async def root():
