@@ -28,7 +28,9 @@
    Registered the Patreon router
    Next steps
    Run Prisma migration (using npx or inside of python virtual env):
+
    > npx prisma migrate dev --name add_patreon_fields # or npx prisma db push
+
    > (venv): prisma migrate dev --name add_patreon_fields # or prisma db push
 
 Set environment variables in your .env:
